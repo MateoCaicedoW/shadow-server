@@ -1,4 +1,4 @@
-package server
+package internal
 
 import (
 	"context"
@@ -19,7 +19,7 @@ type Instance struct {
 	port string
 }
 
-func (r *Instance) Start() error {
+func (r *Instance) StartServer() error {
 	host := fmt.Sprintf("%v:%v", r.host, r.port)
 	fmt.Printf("[info] Starting %v server on port %v\n", r.name, host)
 
@@ -29,12 +29,16 @@ func (r *Instance) Start() error {
 // New sets up and returns a new HTTP server with routes mounted
 // for each of the different features in this application. It also
 // sets up the default middleware for the server.
-func New(name string) *Instance {
+func NewServer(name string) *Instance {
 	r := &Instance{
 		Mux:  chi.NewRouter(),
 		name: name,
-		host: "127.0.0.1", //default host
-		port: "3000",      //default port
+		host: "0.0.0.0", //default host
+		port: "3000",    //default port
+	}
+
+	if Environment == "development" {
+		r.host = "127.0.0.1"
 	}
 
 	r.Use(setValuer)

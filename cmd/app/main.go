@@ -5,17 +5,16 @@ import (
 	"os"
 
 	"github.com/shadow/backend/internal"
-	"github.com/shadow/backend/server"
 )
 
 func main() {
-	s := server.New("Shadow Chat")
+	s := internal.NewServer("Shadow Chat")
 
 	if err := internal.AddRoutes(s); err != nil {
 		os.Exit(1)
 	}
 
-	if err := s.Start(); err != nil {
+	if err := s.StartServer(); err != nil {
 		fmt.Println(err)
 	}
 }

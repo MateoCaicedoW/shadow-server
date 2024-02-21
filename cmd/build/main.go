@@ -6,7 +6,6 @@ import (
 )
 
 func main() {
-
 	cmd := exec.Command("go", "build")
 	cmd.Args = append(
 		cmd.Args,
