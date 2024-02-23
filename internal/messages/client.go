@@ -2,6 +2,7 @@ package messages
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -61,6 +62,7 @@ func (c *Client) write() {
 				return
 			}
 		case <-ticker.C:
+			fmt.Println("pinging after period...", websocket.PingMessage, "nil")
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return

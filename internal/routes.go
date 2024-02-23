@@ -4,6 +4,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/shadow/backend/internal/auth"
 	"github.com/shadow/backend/internal/messages"
 )
 
@@ -20,7 +21,15 @@ func AddRoutes(r *Instance) error {
 	go messages.L.Run()
 
 	r.Route("/", func(r chi.Router) {
-		r.Get("/ws", messages.ServeWs)
+		// Auth
+		r.Post("/auth/login", auth.Login)
+		r.Post("/auth/sign-up", auth.SignUp)
+
+		secure := r.With(auth.JWT)
+		secure.Get("/current_user", auth.GetCurrentUser)
+
+		// Websocket
+		secure.Get("/ws", messages.ServeWs)
 	})
 
 	return nil
