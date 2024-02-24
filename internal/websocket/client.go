@@ -1,4 +1,4 @@
-package messages
+package websocket
 
 import (
 	"context"
@@ -71,25 +71,25 @@ func (c *Client) write() {
 	}
 }
 
-func (c *Client) read() {
-	defer func() {
-		L.Unregister(c)
-		c.conn.Close()
-	}()
-	c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
-	for {
-		_, message, err := c.conn.ReadMessage()
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
-			}
-			break
-		}
+// func (c *Client) read() {
+// 	defer func() {
+// 		L.Unregister(c)
+// 		c.conn.Close()
+// 	}()
+// 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
+// 	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+// 	for {
+// 		_, message, err := c.conn.ReadMessage()
+// 		if err != nil {
+// 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+// 				log.Printf("error: %v", err)
+// 			}
+// 			break
+// 		}
 
-		L.Broadcast(message)
-	}
-}
+// 		L.Broadcast(message)
+// 	}
+// }
 
 // serveWs handles websocket requests from the peer.
 func ServeWs(w http.ResponseWriter, r *http.Request) {
@@ -113,6 +113,6 @@ func ServeWs(w http.ResponseWriter, r *http.Request) {
 	L.Register(client)
 
 	go client.write()
-	go client.read()
+	// go client.read()
 
 }

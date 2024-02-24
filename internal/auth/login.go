@@ -1,42 +1,43 @@
 package auth
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/gobuffalo/validate/v3"
 	"github.com/gobuffalo/validate/v3/validators"
+	"github.com/shadow/backend/internal/json"
 	"github.com/shadow/backend/internal/models"
-	"github.com/shadow/backend/internal/response"
 	"github.com/shadow/backend/internal/services"
 )
 
 func Login(w http.ResponseWriter, r *http.Request) {
 	var user models.User
-	json.NewDecoder(r.Body).Decode(&user)
-
+	if err := json.Decode(r, &user); err != nil {
+		json.Response(w, http.StatusUnprocessableEntity, err.Error())
+		return
+	}
 	userService := r.Context().Value("userService").(models.UserService)
 	jwtService := r.Context().Value("jwtService").(services.JWTService)
 
 	verrs := validateLogin(user.Email, userService)
 	if verrs.HasAny() {
-		response.JSON(w, http.StatusUnprocessableEntity, verrs.Errors)
+		json.Response(w, http.StatusUnprocessableEntity, verrs.Errors)
 		return
 	}
 
 	user, err := userService.GetUserByEmail(user.Email)
 	if err != nil {
-		response.JSON(w, http.StatusInternalServerError, err.Error())
+		json.Response(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	token, err := jwtService.GenerateToken(user)
 	if err != nil {
-		response.JSON(w, http.StatusInternalServerError, err.Error())
+		json.Response(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	response.JSON(w, http.StatusOK, map[string]string{"token": token})
+	json.Response(w, http.StatusOK, map[string]string{"token": token})
 }
 
 func validateLogin(email string, userService models.UserService) *validate.Errors {

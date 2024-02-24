@@ -1,0 +1,2 @@
+ALTER TABLE messages RENAME COLUMN message TO content;
+ALTER TABLE messages ADD COLUMN kind TEXT NOT NULL DEFAULT '';

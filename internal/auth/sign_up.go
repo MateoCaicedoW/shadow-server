@@ -1,23 +1,25 @@
 package auth
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/gobuffalo/validate/v3"
 	"github.com/gobuffalo/validate/v3/validators"
+	"github.com/shadow/backend/internal/json"
 	"github.com/shadow/backend/internal/models"
-	"github.com/shadow/backend/internal/response"
 )
 
 func SignUp(w http.ResponseWriter, r *http.Request) {
 	var user models.User
-	json.NewDecoder(r.Body).Decode(&user)
+	if err := json.Decode(r, &user); err != nil {
+		json.Response(w, http.StatusUnprocessableEntity, err.Error())
+		return
+	}
 
 	userService := r.Context().Value("userService").(models.UserService)
 	verrs := validateSignUp(user, userService)
 	if verrs.HasAny() {
-		response.JSON(w, http.StatusUnprocessableEntity, verrs.Errors)
+		json.Response(w, http.StatusUnprocessableEntity, verrs.Errors)
 		return
 	}
 
@@ -29,11 +31,11 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		response.JSON(w, http.StatusInternalServerError, err.Error())
+		json.Response(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	response.JSON(w, http.StatusCreated, map[string]string{"message": "User created successfully."})
+	json.Response(w, http.StatusCreated, map[string]string{"message": "User created successfully."})
 }
 
 func validateSignUp(user models.User, userService models.UserService) *validate.Errors {

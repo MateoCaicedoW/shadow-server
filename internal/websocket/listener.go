@@ -1,4 +1,4 @@
-package messages
+package websocket
 
 // Listener is used to listen for messages as a hub
 type Listener struct {

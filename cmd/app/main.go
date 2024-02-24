@@ -19,6 +19,7 @@ func main() {
 
 	s.Use(server.InCtxMiddleware("userService", services.Users(dbConn)))
 	s.Use(server.InCtxMiddleware("jwtService", services.JWT()))
+	s.Use(server.InCtxMiddleware("messagesService", services.Messages(dbConn)))
 
 	if err := internal.AddRoutes(s); err != nil {
 		os.Exit(1)
