@@ -29,4 +29,6 @@ type UserService interface {
 	CreateUser(user *User) error
 	// Get a user by their email
 	GetUserByEmail(email string) (User, error)
+	// List all users
+	List() (Users, error)
 }

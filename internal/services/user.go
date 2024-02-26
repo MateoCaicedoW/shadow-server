@@ -39,3 +39,15 @@ func (u *user) GetUserByEmail(email string) (models.User, error) {
 
 	return user, nil
 }
+
+func (u *user) List() (models.Users, error) {
+	query := `SELECT * FROM users`
+	users := []models.User{}
+
+	err := u.db.Select(&users, query)
+	if err != nil {
+		return nil, fmt.Errorf("could not list users: %w", err)
+	}
+
+	return users, nil
+}
