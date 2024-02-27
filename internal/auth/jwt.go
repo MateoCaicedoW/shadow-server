@@ -25,7 +25,7 @@ func JWT(next http.Handler) http.Handler {
 		token = token[len("Bearer "):]
 		_, err := jwtService.ValidateToken(token)
 		if err != nil {
-			w.WriteHeader(http.StatusUnauthorized)
+			w.WriteHeader(http.StatusExpectationFailed)
 			return
 		}
 

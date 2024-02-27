@@ -35,4 +35,5 @@ type ChatService interface {
 	Create(chat *Chat) error
 	Chats(userID uuid.UUID) (ChatSummaries, error)
 	Exists(firstUserID, secondUserID uuid.UUID) (bool, error)
+	Messages(firstUserID, secondUserID uuid.UUID) (MessagesSummary, error)
 }

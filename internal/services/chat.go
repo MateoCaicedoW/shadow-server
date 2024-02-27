@@ -68,3 +68,35 @@ func (c *chat) Exists(firstUserID, secondUserID uuid.UUID) (bool, error) {
 
 	return exists, nil
 }
+
+func (c *chat) Messages(firstUserID, secondUserID uuid.UUID) (models.MessagesSummary, error) {
+	messages := models.MessagesSummary{}
+	query := `
+		SELECT 
+		messages.id,
+		messages.sender_id,
+		messages.receiver_id,
+		messages.content,
+		messages.created_at,
+		suser.first_name AS sender_name,
+		suser.picture AS sender_picture,
+		ruser.first_name AS receiver_name,
+		ruser.picture AS receiver_picture
+	FROM 
+		messages
+	JOIN 
+		users suser ON (suser.id = messages.sender_id)
+	JOIN
+		users ruser ON (ruser.id = messages.receiver_id) 
+	WHERE 
+		(sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1)
+	ORDER BY messages.created_at DESC;
+	`
+
+	err := c.db.Select(&messages, query, firstUserID, secondUserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return messages, nil
+}

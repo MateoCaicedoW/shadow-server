@@ -42,6 +42,8 @@ func AddRoutes(r *Instance) error {
 			//Exists receives the sender and receiver id and returns a boolean if the chat exists
 			r.Get("/exists", chats.Exists)
 			r.Post("/", chats.Create)
+			r.Get("/{first_user_id}/{second_user_id}", chats.Messages)
+
 		}) // Messages
 		secure.Route("/messages", func(r chi.Router) {
 			// r.Get("/", messages.List)
