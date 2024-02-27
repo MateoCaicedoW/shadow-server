@@ -14,8 +14,8 @@ type message struct {
 	db *sqlx.DB
 }
 
-func Messages(db *sqlx.DB) *user {
-	return &user{db: db}
+func Messages(db *sqlx.DB) *message {
+	return &message{db: db}
 }
 
 func (m *message) Create(message *models.Message) error {

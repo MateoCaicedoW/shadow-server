@@ -31,4 +31,7 @@ type UserService interface {
 	GetUserByEmail(email string) (User, error)
 	// List all users
 	List() (Users, error)
+
+	// Get a user by their ID
+	GetByID(userID uuid.UUID) (User, error)
 }

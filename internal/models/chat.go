@@ -34,6 +34,7 @@ type ChatSummaries []ChatSummary
 type ChatService interface {
 	Create(chat *Chat) error
 	Chats(userID uuid.UUID) (ChatSummaries, error)
-	Exists(firstUserID, secondUserID uuid.UUID) (bool, error)
-	Messages(firstUserID, secondUserID uuid.UUID) (MessagesSummary, error)
+	Exists(firstUserID, secondUserID uuid.UUID) (uuid.UUID, error)
+	Messages(chatID uuid.UUID) (MessagesSummary, error)
+	ExistsByUserID(userID, chatID uuid.UUID) (bool, error)
 }

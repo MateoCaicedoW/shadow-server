@@ -34,9 +34,9 @@ func (c *chat) Chats(userID uuid.UUID) (models.ChatSummaries, error) {
 		chats.id,
 		chats.first_user_id,
 		chats.second_user_id,
-		fuser.first_name AS first_user_name,
+		CONCAT(fuser.first_name, ' ', fuser.last_name) AS first_user_name,
 		fuser.picture AS first_user_picture,
-		suser.first_name AS second_user_name,
+		CONCAT(suser.first_name, ' ', suser.last_name) AS second_user_name,
 		suser.picture AS second_user_picture
 
 	FROM 
@@ -58,45 +58,56 @@ func (c *chat) Chats(userID uuid.UUID) (models.ChatSummaries, error) {
 	return chats, nil
 }
 
-func (c *chat) Exists(firstUserID, secondUserID uuid.UUID) (bool, error) {
-	query := `SELECT EXISTS(SELECT 1 FROM chats WHERE (first_user_id = $1 AND second_user_id = $2) OR (first_user_id = $2 AND second_user_id = $1))`
-	var exists bool
-	err := c.db.Get(&exists, query, firstUserID, secondUserID)
+func (c *chat) Exists(firstUserID, secondUserID uuid.UUID) (uuid.UUID, error) {
+	query := `SELECT (SELECT id FROM chats WHERE (first_user_id = $1 AND second_user_id = $2) OR (first_user_id = $2 AND second_user_id = $1))`
+	var id uuid.NullUUID
+	err := c.db.Get(&id, query, firstUserID, secondUserID)
 	if err != nil {
-		return false, err
+		return id.UUID, err
 	}
 
-	return exists, nil
+	return id.UUID, nil
 }
 
-func (c *chat) Messages(firstUserID, secondUserID uuid.UUID) (models.MessagesSummary, error) {
+func (c *chat) Messages(chatID uuid.UUID) (models.MessagesSummary, error) {
 	messages := models.MessagesSummary{}
 	query := `
 		SELECT 
 		messages.id,
-		messages.sender_id,
-		messages.receiver_id,
+		messages.sender_id as user_id,
 		messages.content,
-		messages.created_at,
-		suser.first_name AS sender_name,
-		suser.picture AS sender_picture,
-		ruser.first_name AS receiver_name,
-		ruser.picture AS receiver_picture
+		users.first_name AS user_first_name,
+		users.last_name AS user_last_name,
+		users.email AS user_email,
+		users.picture AS user_picture,
+		messages.element_id,
+		messages.kind
 	FROM 
 		messages
 	JOIN 
-		users suser ON (suser.id = messages.sender_id)
-	JOIN
-		users ruser ON (ruser.id = messages.receiver_id) 
+		users ON (users.id = messages.sender_id)
+	JOIN 
+		chats ON (chats.id = messages.element_id)
 	WHERE 
-		(sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1)
-	ORDER BY messages.created_at DESC;
+		messages.element_id = $1
+	ORDER BY messages.created_at ASC;
 	`
 
-	err := c.db.Select(&messages, query, firstUserID, secondUserID)
+	err := c.db.Select(&messages, query, chatID)
 	if err != nil {
 		return nil, err
 	}
 
 	return messages, nil
+}
+
+func (c *chat) ExistsByUserID(userID, chatID uuid.UUID) (bool, error) {
+	query := `SELECT EXISTS(SELECT 1 FROM chats WHERE id = $1 AND (first_user_id = $2 OR second_user_id = $2))`
+	var exists bool
+	err := c.db.Get(&exists, query, chatID, userID)
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
 }

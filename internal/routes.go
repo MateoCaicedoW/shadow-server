@@ -21,7 +21,7 @@ func AddRoutes(r *Instance) error {
 	r.Use(middleware.RequestID)
 	r.Use(cors.AllowAll().Handler)
 
-	go websocket.L.Run()
+	go websocket.Run()
 
 	r.Route("/", func(r chi.Router) {
 		// Auth
@@ -42,16 +42,20 @@ func AddRoutes(r *Instance) error {
 			//Exists receives the sender and receiver id and returns a boolean if the chat exists
 			r.Get("/exists", chats.Exists)
 			r.Post("/", chats.Create)
-			r.Get("/{first_user_id}/{second_user_id}", chats.Messages)
+			r.Route("/{id}", func(r chi.Router) {
+				// r.Get("/", chats.Get)
+				r.Get("/exists_by_user_id", chats.ExistsByUserID)
 
-		}) // Messages
-		secure.Route("/messages", func(r chi.Router) {
-			// r.Get("/", messages.List)
-			r.Post("/", messages.Send)
+				// Messages
+				r.Route("/messages", func(r chi.Router) {
+					r.Get("/", chats.Messages)
+					r.Post("/", messages.Send)
+				})
+			})
 		})
 
 		// Websocket
-		secure.Get("/ws", websocket.ServeWs)
+		secure.Get("/ws/{section}", websocket.Serve)
 	})
 
 	return nil

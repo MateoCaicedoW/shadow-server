@@ -10,11 +10,9 @@ import (
 )
 
 func Messages(w http.ResponseWriter, r *http.Request) {
-	firstUserID := uuid.FromStringOrNil(chi.URLParam(r, "first_user_id"))
-	secondUserID := uuid.FromStringOrNil(chi.URLParam(r, "second_user_id"))
-
+	chatID := chi.URLParam(r, "id")
 	chatService := r.Context().Value("chatService").(models.ChatService)
-	messages, err := chatService.Messages(firstUserID, secondUserID)
+	messages, err := chatService.Messages(uuid.FromStringOrNil(chatID))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

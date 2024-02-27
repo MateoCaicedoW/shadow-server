@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 
+	"github.com/gofrs/uuid/v5"
 	"github.com/jmoiron/sqlx"
 	"github.com/shadow/backend/internal/models"
 )
@@ -50,4 +51,16 @@ func (u *user) List() (models.Users, error) {
 	}
 
 	return users, nil
+}
+
+func (u *user) GetByID(userID uuid.UUID) (models.User, error) {
+	user := models.User{}
+	query := `SELECT * FROM users WHERE id = $1`
+
+	err := u.db.Get(&user, query, userID)
+	if err != nil {
+		return user, fmt.Errorf("could not find user with id %s", userID)
+	}
+
+	return user, nil
 }

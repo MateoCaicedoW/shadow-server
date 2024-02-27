@@ -1,50 +1,61 @@
 package websocket
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 // Listener is used to listen for messages as a hub
-type Listener struct {
+type listener struct {
 	clients    map[*Client]bool
 	broadcast  chan []byte
 	register   chan *Client
 	unregister chan *Client
 }
 
-var L = &Listener{
+var listen = listener{
 	broadcast:  make(chan []byte),
 	register:   make(chan *Client),
 	unregister: make(chan *Client),
 	clients:    make(map[*Client]bool),
 }
 
-func (l *Listener) Register(c *Client) {
-	l.register <- c
-}
-
-func (l *Listener) Unregister(c *Client) {
-	l.unregister <- c
-}
-
-func (l *Listener) Broadcast(m []byte) {
-	l.broadcast <- m
+func Broadcast(m []byte) {
+	listen.broadcast <- m
 }
 
 // Run starts the listener
-func (l *Listener) Run() {
+func Run() {
 	for {
 		select {
-		case client := <-l.register:
-			l.clients[client] = true
-		case client := <-l.unregister:
-			if _, ok := l.clients[client]; ok {
-				delete(l.clients, client)
+		case client := <-listen.register:
+			listen.clients[client] = true
+		case client := <-listen.unregister:
+			if _, ok := listen.clients[client]; ok {
+				delete(listen.clients, client)
 				close(client.send)
 			}
-		case message := <-l.broadcast:
-			for client := range l.clients {
+		case message := <-listen.broadcast:
+			for client := range listen.clients {
+				//send message only to the clients in the same room
+				var jsonMap map[string]interface{}
+				err := json.Unmarshal(message, &jsonMap)
+				if err != nil {
+					fmt.Println("Error unmarshalling message", err)
+				}
+
+				fmt.Println("Section: ", jsonMap["element_id"])
+				fmt.Println("Client Section: ", client.section)
+
+				if client.section != jsonMap["section"] {
+					continue
+				}
+
 				select {
 				case client.send <- message:
 				default:
 					close(client.send)
-					delete(l.clients, client)
+					delete(listen.clients, client)
 				}
 			}
 		}

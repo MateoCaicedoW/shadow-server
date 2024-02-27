@@ -1,7 +1,6 @@
 package users
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -16,7 +15,6 @@ func MyChats(w http.ResponseWriter, r *http.Request) {
 
 	chats, err := chatService.Chats(userID)
 	if err != nil {
-		fmt.Println("error getting chats: ", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

@@ -13,11 +13,13 @@ func Exists(w http.ResponseWriter, r *http.Request) {
 	firstUserID := uuid.FromStringOrNil(r.URL.Query().Get("first_user_id"))
 	secondUserID := uuid.FromStringOrNil(r.URL.Query().Get("second_user_id"))
 
-	exists, err := chatService.Exists(firstUserID, secondUserID)
+	chatID, err := chatService.Exists(firstUserID, secondUserID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	json.Response(w, http.StatusOK, exists)
+	response := map[string]any{"exists": !chatID.IsNil(), "chat_id": chatID}
+
+	json.Response(w, http.StatusOK, response)
 }
