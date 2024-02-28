@@ -6,6 +6,7 @@ import (
 
 	"github.com/shadow/backend/internal/json"
 	"github.com/shadow/backend/internal/models"
+	"github.com/shadow/backend/internal/websocket"
 )
 
 func Create(w http.ResponseWriter, r *http.Request) {
@@ -48,5 +49,19 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		LastMessageAt:     time.Time{},
 	}
 
-	json.Response(w, http.StatusCreated, chatSummary)
+	chatSummaryMap := map[string]interface{}{
+		"element_id": "chats",
+		"action":     "create",
+		"chat":       chatSummary,
+	}
+
+	json.Response(w, http.StatusCreated, chatSummaryMap)
+
+	messageByte, err := json.Marshal(chatSummaryMap)
+	if err != nil {
+		json.Response(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	websocket.Broadcast(messageByte)
 }
