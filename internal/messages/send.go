@@ -7,7 +7,7 @@ import (
 	"github.com/gofrs/uuid/v5"
 	"github.com/shadow/backend/internal/json"
 	"github.com/shadow/backend/internal/models"
-	"github.com/shadow/backend/internal/websocket"
+	"github.com/shadow/backend/internal/multiroom"
 )
 
 func Send(w http.ResponseWriter, r *http.Request) {
@@ -34,11 +34,16 @@ func Send(w http.ResponseWriter, r *http.Request) {
 	}
 
 	message.ID = m.ID
-	messageByte, err := json.Marshal(message)
-	if err != nil {
-		json.Response(w, http.StatusInternalServerError, err.Error())
-		return
+
+	client := multiroom.WebSocketServer.FindClientByID(message.UserID.String())
+	room := multiroom.WebSocketServer.FindRoomByID(chatID)
+	roomMessage := multiroom.Message{
+		Action:  multiroom.SendMessageAction,
+		Message: message.Content,
+		Target:  room,
+		Sender:  client,
 	}
 
-	websocket.Broadcast(messageByte)
+	client.HandleNewMessage(roomMessage.Encode())
+	// websocket.Broadcast(messageByte)
 }

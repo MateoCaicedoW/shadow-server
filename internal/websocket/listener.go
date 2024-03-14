@@ -44,9 +44,6 @@ func Run() {
 					fmt.Println("Error unmarshalling message", err)
 				}
 
-				fmt.Println("Client section", client)
-				fmt.Println("Message section", jsonMap)
-
 				if client.section != jsonMap["element_id"] {
 					continue
 				}

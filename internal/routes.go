@@ -1,12 +1,15 @@
 package internal
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/shadow/backend/internal/auth"
 	"github.com/shadow/backend/internal/chats"
 	"github.com/shadow/backend/internal/messages"
+	"github.com/shadow/backend/internal/multiroom"
 	"github.com/shadow/backend/internal/users"
 	"github.com/shadow/backend/internal/websocket"
 )
@@ -21,7 +24,9 @@ func AddRoutes(r *Instance) error {
 	r.Use(middleware.RequestID)
 	r.Use(cors.AllowAll().Handler)
 
+	wsServer := multiroom.WebSocketServer
 	go websocket.Run()
+	go wsServer.Run()
 
 	r.Route("/", func(r chi.Router) {
 		// Auth
@@ -56,6 +61,9 @@ func AddRoutes(r *Instance) error {
 
 		// Websocket
 		secure.Get("/ws/{section}", websocket.Serve)
+		secure.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
+			multiroom.ServeWs(wsServer, w, r)
+		})
 	})
 
 	return nil
